@@ -13,8 +13,8 @@ services:
         ZOO_MY_ID: 2
         ZOO_SERVERS: server.1=zookeeper-1:2888:3888;2181 server.2=0.0.0.0:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
       volumes:
-        - ./zoo1/zk-data:/var/lib/zookeeper/data
-        - ./zoo1/zk-txn-logs:/var/lib/zookeeper/log
+        - ./zoo2/zk-data:/var/lib/zookeeper/data
+        - ./zoo2/zk-txn-logs:/var/lib/zookeeper/log
       network_mode: "host"
 
   kafka-2:
@@ -32,7 +32,7 @@ services:
         KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
         KAFKA_ZOOKEEPER_CONNECT: IP_ADDRESS_SERVER_1:2181,IP_ADDRESS_SERVER_2:2181,IP_ADDRESS_SERVER_3:2181
       volumes:
-        - ./kafka1/kafka-data:/var/lib/kafka/data
+        - ./kafka2/kafka-data:/var/lib/kafka/data
       network_mode: "host"
       restart: always
   
