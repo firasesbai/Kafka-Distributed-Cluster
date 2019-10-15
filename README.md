@@ -114,7 +114,46 @@ kafka-connect-consumer --topic test-distributed --from-beginning --bootstrap-ser
 echo "rest api test" >> demo-file.txt
 ```
 - You should now see your data in the console consumer
-
+## Confluent Schema registry, KSQL and REST Proxy
+### Deploy services
+Replace the following settings in the compose files **IP_ADDRESS_SERVER_1**, **IP_ADDRESS_SERVER_2** and **IP_ADDRESS_SERVER_3** with the corresponding IP addresses in each node of the cluster 
+## Lenses.io UIs
+### Topics UI
+Add the following service with the appropriate IP address to the docker compose file of the first node and redeploy it
+```
+  kafka-topics-ui:
+      image: landoop/kafka-topics-ui:0.9.4
+      hostname: kafka-topics-ui
+      container_name: kafka-topics-ui
+      ports:
+        - "8000:8000"
+      environment:
+        KAFKA_REST_PROXY_URL: "http://IP_ADDRESS_SERVER_1:8082"
+        PROXY: "true"
+      depends_on:
+        - zookeeper-1
+        - kafka-1
+        - schema-registry-1
+        - rest-proxy
+      network_mode: "host"
+```
+Access this url ``http://IP_ADDRESS_SERVER_1:8000`` and you should be prompted with the topics interface 
+### Connect UI
+Add the following service with the appropriate IP address to the docker compose file of the first node and redeploy it
+```
+  kafka-connect-ui:
+      image: landoop/kafka-connect-ui:0.9.4
+      hostname: kafka-connect-ui
+      container_name: kafka-connect-ui
+      ports:
+        - "8003:8000"
+      environment:
+        CONNECT_URL: "http://IP_ADDRESS_SERVER_1:8083"
+        PROXY: "true"
+      depends_on:
+        - kafka-connect-1
+```
+Access this url `` http://IP_ADDRESS_SERVER_1:8003`` and you should be prompted with the connect interface 
 ## Authors 
 * **Firas Esbai** - *Initial work* - [Firas Esbai](https://github.com/firasesbai) 
 ## Licence 
