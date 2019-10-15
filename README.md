@@ -9,6 +9,16 @@ Get the Docker engine community edition following the steps in the official docu
 This Setup was tested on Ubuntu 18.04. 
 #### - docker-compose 
 Install docker compose which relies on docker engine following the steps [here](https://docs.docker.com/compose/install/).
+### Docker Images Version
+- Zookeeper: 3.5
+- Kafka: 2.3.0 (Confluent 5.3.1)
+- kafka connect: Confluent 5.3.1
+- Schema-registry: Confluent 5.3.1
+- KSQL-server: Confluent 5.3.1
+- KSQL-CLI: Confluent 5.3.1
+- REST-Proxy: Confluent 5.3.1
+- Kafka-topics-ui: 0.9.4
+- kafka-connect-ui: 0.9.4
 ### Setup 
 To deploy services, run in each node of the cluster the following command after changing to the directory where you have copied the appropriate compose file with the necessary changes: 
 ```
