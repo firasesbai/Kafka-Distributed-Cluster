@@ -25,6 +25,7 @@ services:
         - zookeeper-3
       ports:
         - "9094:9094"
+        - "19094:19094"
       environment:
         KAFKA_BROKER_ID: 3
         KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://IP_ADDRESS_SERVER_3:19094,LISTENER_DOCKER_EXTERNAL://IP_ADDRESS_SERVER_3:9094
