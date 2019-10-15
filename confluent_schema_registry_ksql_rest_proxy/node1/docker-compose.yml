@@ -1,0 +1,124 @@
+---
+version: '2'
+services:
+
+  zookeeper-1:
+      restart: always
+      image: "zookeeper:3.5"
+      hostname: zookeeper-1
+      container_name: zookeeper-1
+      ports:
+        - "2181"
+      environment:
+        ZOO_MY_ID: 1
+        ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=IP_ADDRESS_SERVER_2:2888:3888;2181 server.3=IP_ADDRESS_SERVER_3:2888:3888;2181
+      volumes:
+        - ./zoo1/zk-data:/var/lib/zookeeper/data
+        - ./zoo1/zk-txn-logs:/var/lib/zookeeper/log
+      network_mode: "host"
+
+  kafka-1:
+      image: confluentinc/cp-kafka:5.3.1
+      container_name: kafka-1
+      depends_on:
+        - zookeeper-1
+      ports:
+        - "9092:9092"
+        - "19092:19092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ADVERTISED_HOST_NAME: IP_ADDRESS_SERVER_1
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://IP_ADDRESS_SERVER_1:19092,LISTENER_DOCKER_EXTERNAL://IP_ADDRESS_SERVER_1:9092
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        KAFKA_ZOOKEEPER_CONNECT: IP_ADDRESS_SERVER_1:2181,IP_ADDRESS_SERVER_2:2181,IP_ADDRESS_SERVER_3:2181
+      volumes:
+        - ./kafka1/kafka-data:/var/lib/kafka/data
+      network_mode: "host"
+      restart: always
+
+  schema-registry-1:
+      image: confluentinc/cp-schema-registry:5.3.1
+      container_name: schema-registry-1
+      depends_on:
+        - zookeeper-1
+        - kafka-1
+      ports:
+        - "8081:8081"
+      environment:
+        SCHEMA_REGISTRY_HOST_NAME: schema-registry-1
+        SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: IP_ADDRESS_SERVER_1:2181,IP_ADDRESS_SERVER_2:2181,IP_ADDRESS_SERVER_3:2181
+        SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://IP_ADDRESS_SERVER_1:19092,PLAINTEXT://IP_ADDRESS_SERVER_2:19093,PLAINTEXT://IP_ADDRESS_SERVER_3:19094
+      network_mode: "host"
+      restart: always
+
+  kafka-connect-1:
+      image: confluentinc/cp-kafka-connect:5.3.1
+      container_name: kafka-connect-1
+      depends_on:
+        - kafka-1
+        - zookeeper-1
+      ports:
+        - "8083:8083"
+      environment:
+        CONNECT_BOOTSTRAP_SERVERS:IP_ADDRESS_SERVER_1:19092,IP_ADDRESS_SERVER_2:19093,IP_ADDRESS_SERVER_3:19094
+        CONNECT_REST_ADVERTISED_HOST_NAME: IP_ADDRESS_SERVER_1
+        CONNECT_REST_PORT: 8083
+        CONNECT_GROUP_ID: kafka-connect-group
+        CONNECT_CONFIG_STORAGE_TOPIC: kafka-connect-configs
+        CONNECT_OFFSET_STORAGE_TOPIC: kafka-connect-offsets
+        CONNECT_STATUS_STORAGE_TOPIC: kafka-connect-status
+        CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_ZOOKEEPER_CONNECT: IP_ADDRESS_SERVER_1:2181,IP_ADDRESS_SERVER_2:2181,IP_ADDRESS_SERVER_3:2181
+        CONNECT_PLUGIN_PATH: /usr/share/java
+      network_mode: "host"
+      restart: always
+
+  ksql-server-1:
+      image: confluentinc/cp-ksql-server:5.3.1
+      container_name: ksql-server-1
+      depends_on:
+        - kafka-1
+        - kafka-connect-1
+      ports:
+        - "8088:8088"
+      environment:
+        KSQL_BOOTSTRAP_SERVERS: IP_ADDRESS_SERVER_1:19092,IP_ADDRESS_SERVER_2:19093,IP_ADDRESS_SERVER_3:19094
+        KSQL_LISTENERS: http://0.0.0.0:8088/
+        KSQL_KSQL_SERVICE_ID: ksql_service_1_
+        KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://IP_ADDRESS_SERVER_1:8081"
+      network_mode: "host"
+      restart: always
+
+  ksql-cli:
+      image: confluentinc/cp-ksql-cli:5.3.1
+      container_name: ksql-cli
+      depends_on:
+        - kafka-1
+        - kafka-connect-1
+        - ksql-server-1
+      network_mode: "host"
+      restart: always
+      entrypoint: /bin/sh
+      tty: true
+
+  rest-proxy:
+      image: confluentinc/cp-kafka-rest:5.3.1
+      hostname: rest-proxy
+      container_name: rest-proxy
+      depends_on:
+        - zookeeper-1
+        - kafka-1
+        - schema-registry-1
+      ports:
+        - "8082:8082"
+      environment:
+        KAFKA_REST_HOST_NAME: rest-proxy
+        KAFKA_REST_BOOTSTRAP_SERVERS: IP_ADDRESS_SERVER_1:19092,IP_ADDRESS_SERVER_2:19093,IP_ADDRESS_SERVER_3:19094
+        KAFKA_REST_LISTENERS: http://0.0.0.0:8082/
+        KAFKA_REST_SCHEMA_REGISTRY_URL: "http://IP_ADDRESS_SERVER_1:8081"
+      network_mode: "host"
+      restart: always
