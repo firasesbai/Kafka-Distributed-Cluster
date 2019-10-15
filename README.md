@@ -34,7 +34,7 @@ docker exec -it kafka-1 bash
 ```
 kafka-topics --create --topic test-standalone --partitions 3 --replication-factor 1 --zookeeper zookeeper-1:2181
 ```
-- Create the files [worker.properties](worker.properties) and [file-stream-standalone.properties](file-stream-standalone.properties)
+- Create the files [worker.properties](./distributed_cluster_setup/tests/standalone_mode/worker.properties) and [file-stream-standalone.properties](./distributed_cluster_setup/tests/standalone_mode/file-stream-standalone.properties) and update them with your servers' IP addresses
 - Copy the previously created files inside the **kafka-connect** container using the following commands
 ```
 docker cp worker.properties kafka-connect-1:/
@@ -67,7 +67,7 @@ echo "hi" >> demo-file.txt
 
 **2.2- Distributed mode**
 <br/> 
-- Create the file [file-stream-distributed.properties](file-stream-distributed.properties)</br></br>
+- Create the file [file-stream-distributed.properties](./distributed_cluster_setup/tests/distributed_mode/file-stream-distributed.properties) and update it with your servers' IP addresses</br></br>
 - Copy this file inside the **kafka-connect** container
 ```
 docker cp file-stream-distributed.properties kafka-connect:/
@@ -88,9 +88,32 @@ kafka-connect-consumer --topic test-distributed --from-beginning --bootstrap-ser
 echo "hi again" >> demo-file.txt
 ```
 - You should now see your data in the console consumer
-</br>
 
 **2.3- Rest API**
+- Run the following command to create a new file stream connector in distributed mode
+```
+curl -s -X POST -H "Content-Type: application/json" --data '{"name": "file-stream-demo-distributed-2", "config":{"connector.class":"org.apache.kafka.connect.file.FileStreamSourceConnector","key.converter.schemas.enable":"true","file":"demo-file.txt","tasks.max":"1","value.converter.schemas.enable":"true","name":"file-stream-demo-distributed-2","topic":"test-distributed","value.converter":"org.apache.kafka.connect.json.JsonConverter","key.converter":"org.apache.kafka.connect.json.JsonConverter"}}' http://kafka-connect-1:8083/connectors
+```
+- List connectors available on your worker (you should see your newly created connector *file-stream-demo-distributed-2*)
+```
+curl -s kafka-connect-1:8083/connector-plugins
+```
+- Get connector status (it shoud be in state *Running*)
+```
+curl -s kafka-connect-1:8083/connectors/file-stream-demo-distributed-2/status
+```
+- Start a console consumer in **kafka-1** broker
+```
+docker exec -it kafka-1 bash 
+```
+```
+kafka-connect-consumer --topic test-distributed --from-beginning --bootstrap-server kafka-1:9092
+```
+- Put some data into *demo-file.txt*
+```
+echo "rest api test" >> demo-file.txt
+```
+- You should now see your data in the console consumer
 
 ## Authors 
 * **Firas Esbai** - *Initial work* - [Firas Esbai](https://github.com/firasesbai) 
