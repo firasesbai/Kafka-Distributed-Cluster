@@ -156,7 +156,7 @@ Add the following service with the appropriate IP address to the docker compose 
       hostname: kafka-connect-ui
       container_name: kafka-connect-ui
       ports:
-        - "8003:8000"
+        - "8003:8003"
       environment:
         CONNECT_URL: "http://IP_ADDRESS_SERVER_1:8083"
         PROXY: "true"
@@ -165,6 +165,6 @@ Add the following service with the appropriate IP address to the docker compose 
 ```
 Access this url `` http://IP_ADDRESS_SERVER_1:8003`` and you should be prompted with the connect interface 
 ## Authors 
-* **Firas Esbai** - *Initial work* - [Firas Esbai](https://github.com/firasesbai) 
+* **Firas Esbai** 
 ## Licence 
 This project is licenced under the [Apache-2.0 Licence](https://www.apache.org/licenses/LICENSE-2.0) - see the [LICENCE](LICENCE.md) file for details.
