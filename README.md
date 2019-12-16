@@ -49,7 +49,7 @@ docker exec -it kafka-1 bash
 ```
 kafka-topics --create --topic test-standalone --partitions 3 --replication-factor 1 --zookeeper zookeeper-1:2181
 ```
-- Create the files [worker.properties](./distributed_cluster_setup/tests/standalone_mode/worker.properties) and [file-stream-standalone.properties](./distributed_cluster_setup/tests/standalone_mode/file-stream-standalone.properties) and update them with your servers' IP addresses
+- Create the files [worker.properties](./file-stream-connector/standalone_mode/worker.properties) and [file-stream-standalone.properties](./file-stream-connector/standalone_mode/file-stream-standalone.properties) and update them with your servers' IP addresses
 - Copy the previously created files inside the **kafka-connect** container using the following commands
 ```
 docker cp worker.properties kafka-connect-1:/
@@ -82,7 +82,7 @@ echo "hi" >> demo-file.txt
 
 **2.2- Distributed mode**
 <br/> 
-- Create the file [file-stream-distributed.properties](./distributed_cluster_setup/tests/distributed_mode/file-stream-distributed.properties) and update it with your servers' IP addresses</br></br>
+- Create the file [file-stream-distributed.properties](./file-stream-connector/distributed_mode/file-stream-distributed.properties) and update it with your servers' IP addresses</br></br>
 - Copy this file inside the **kafka-connect** container
 ```
 docker cp file-stream-distributed.properties kafka-connect:/
