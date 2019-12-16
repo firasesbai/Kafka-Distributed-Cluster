@@ -12,10 +12,16 @@ services:
       environment:
         ZOO_MY_ID: 1
         ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=zookeeper-2:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
+        ZOO_TICK_TIME: 2000
+        ZOO_INIT_LIMIT: 10
+        ZOO_SYNC_LIMIT: 5
+        ZOO_MAX_CLIENT_CNXNS: 60
+        ZOO_4LW_COMMANDS_WHITELIST: "conf,cons,dump,envi,ruok,stat,wchs,wchc,wchp,mntr"
+        ZOO_LOG4J_PROP: "INFO,ROLLINGFILE"
       volumes:
-        - ./zoo1/zk-data:/var/lib/zookeeper/data
-        - ./zoo1/zk-txn-logs:/var/lib/zookeeper/log
-      network_mode: "host"
+        - ./zoo1/data:/data
+        - ./zoo1/datalog:/datalog
+        - ./zoo1/logs:/logs
 
   kafka-1:
       image: confluentinc/cp-kafka:5.3.1
@@ -29,12 +35,11 @@ services:
       environment:
         KAFKA_BROKER_ID: 1
         KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://IP_ADDRESS_SERVER_1:19092,LISTENER_DOCKER_EXTERNAL://IP_ADDRESS_SERVER_1:9092
-        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
         KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
         KAFKA_ZOOKEEPER_CONNECT: IP_ADDRESS_SERVER_1:2181,IP_ADDRESS_SERVER_2:2181,IP_ADDRESS_SERVER_3:2181
       volumes:
         - ./kafka1/kafka-data:/var/lib/kafka/data
-      network_mode: "host"
       restart: always
   
   kafka-connect-1:
@@ -59,5 +64,4 @@ services:
         CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
         CONNECT_ZOOKEEPER_CONNECT: IP_ADDRESS_SERVER_1:2181,IP_ADDRESS_SERVER_2:2181,IP_ADDRESS_SERVER_3:2181
         CONNECT_PLUGIN_PATH: /usr/share/java
-      network_mode: "host"
       restart: always
