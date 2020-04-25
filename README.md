@@ -204,4 +204,4 @@ Access this url `` http://IP_ADDRESS_SERVER_4:9001`` and you should be prompted 
 ## Authors 
 * **Firas Esbai** 
 ## Licence 
-This project is licenced under the [Apache-2.0 Licence](https://www.apache.org/licenses/LICENSE-2.0) - see the [LICENCE](LICENCE.md) file for details.
+This project is licenced under the [Apache-2.0 Licence](https://www.apache.org/licenses/LICENSE-2.0)
