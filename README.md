@@ -1,4 +1,4 @@
-# Kafka-Cluster-Stack-docker
+# Kafka-Distributed-Cluster
 Apache Kafka is a distributed streaming platform. Additional tools and services have been created around it to build and manage an Event Streaming Platform.<br/>
 This will provide a template for real world distributed kafka cluster deployment. Components will be in a *physically distributed* and *distinct servers*. Since monitoring your kafka cluster is tedious yet a very important task, instructions for integrating frameworks and UIs from **Confluent Inc**, **lenses.io** and other Open source projects are also provided to facilitate the management and configuration of the cluster.     
 ## Getting started 
