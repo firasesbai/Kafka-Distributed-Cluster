@@ -1,0 +1,346 @@
+---
+version: '2.1'
+services:
+
+  zookeeper-1:
+      restart: always
+      image: "zookeeper:3.5"
+      hostname: zookeeper-1
+      container_name: zookeeper-1
+      ports:
+        - "2181:2181"
+      environment:
+        ZOO_MY_ID: 1
+        ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=zookeeper-2:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
+      volumes:
+        - ./zoo1/data:/data
+        - ./zoo1/datalog:/datalog
+        - ./zoo1/logs:/logs
+
+  zookeeper-2:
+      restart: always
+      image: "zookeeper:3.5"
+      hostname: zookeeper-2
+      container_name: zookeeper-2
+      ports:
+        - "2182:2181"
+      environment:
+        ZOO_MY_ID: 2
+        ZOO_SERVERS: server.1=zookeeper-1:2888:3888;2181 server.2=0.0.0.0:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
+      volumes:
+        - ./zoo2/data:/data
+        - ./zoo2/datalog:/datalog
+        - ./zoo2/logs:/logs
+
+  zookeeper-3:
+      restart: always
+      image: "zookeeper:3.5"
+      hostname: zookeeper-3
+      container_name: zookeeper-3
+      ports:
+        - "2183:2181"
+      environment:
+        ZOO_MY_ID: 3
+        ZOO_SERVERS: server.1=zookeeper-1:2888:3888;2181 server.2=zookeeper-2:2888:3888;2181 server.3=0.0.0.0:2888:3888;2181
+      volumes:
+        - ./zoo3/data:/data
+        - ./zoo3/datalog:/datalog
+        - ./zoo3/logs:/logs
+
+  kafka-1:
+      image: confluentinc/cp-kafka:5.3.1
+      container_name: kafka-1
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+      ports:
+        - "9092:9092"
+        - "19092:19092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ADVERTISED_HOST_NAME: kafka-1
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:19092,LISTENER_DOCKER_EXTERNAL://kafka-1:9092
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      volumes:
+        - ./kafka1/kafka-data:/var/lib/kafka/data
+      restart: always
+
+  kafka-2:
+      image: confluentinc/cp-kafka:5.3.1
+      container_name: kafka-2
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+      ports:
+        - "9093:9093"
+        - "19093:19093"
+      environment:
+        KAFKA_BROKER_ID: 2
+        KAFKA_ADVERTISED_HOST_NAME: kafka-2
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:19093,LISTENER_DOCKER_EXTERNAL://kafka-2:9093
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      volumes:
+        - ./kafka2/kafka-data:/var/lib/kafka/data
+      restart: always
+
+ kafka-3:
+      image: confluentinc/cp-kafka:5.3.1
+      container_name: kafka-3
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+      ports:
+        - "9094:9094"
+        - "19094:19094"
+      environment:
+        KAFKA_BROKER_ID: 3
+        KAFKA_ADVERTISED_HOST_NAME: kafka-3
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:19094,LISTENER_DOCKER_EXTERNAL://kafka-3:9094
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      volumes:
+        - ./kafka3/kafka-data:/var/lib/kafka/data
+      restart: always
+
+  schema-registry-1:
+      image: confluentinc/cp-schema-registry:5.3.1
+      container_name: schema-registry-1
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+      ports:
+        - "8081:8081"
+      environment:
+        SCHEMA_REGISTRY_HOST_NAME: schema-registry-1
+        SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+        SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:19092,PLAINTEXT://kafka-2:19093,PLAINTEXT://kafka-3:19094
+      restart: always
+
+  schema-registry-2:
+      image: confluentinc/cp-schema-registry:5.3.1
+      container_name: schema-registry-2
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+      ports:
+        - "8082:8081"
+      environment:
+        SCHEMA_REGISTRY_HOST_NAME: schema-registry-2
+        SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+        SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:19092,PLAINTEXT://kafka-2:19093,PLAINTEXT://kafka-3:19094
+
+  schema-registry-3:
+      image: confluentinc/cp-schema-registry:5.3.1
+      container_name: schema-registry-3
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+      ports:
+        - "8083:8081"
+      environment:
+        SCHEMA_REGISTRY_HOST_NAME: schema-registry-3
+        SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+        SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:19092,PLAINTEXT://kafka-2:19093,PLAINTEXT://kafka-3:19094
+      restart: always
+
+  kafka-connect-1:
+      image: confluentinc/cp-kafka-connect:5.3.1
+      container_name: kafka-connect-1
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+      ports:
+        - "8083:8083"
+      environment:
+        CONNECT_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-1
+        CONNECT_REST_PORT: 8083
+        CONNECT_GROUP_ID: kafka-connect-group
+        CONNECT_CONFIG_STORAGE_TOPIC: kafka-connect-configs
+        CONNECT_OFFSET_STORAGE_TOPIC: kafka-connect-offsets
+        CONNECT_STATUS_STORAGE_TOPIC: kafka-connect-status
+        CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+        CONNECT_PLUGIN_PATH: /usr/share/java
+      restart: always
+
+  kafka-connect-2:
+      image: confluentinc/cp-kafka-connect:5.3.1
+      container_name: kafka-connect-2
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+      ports:
+        - "8084:8083"
+      environment:
+        CONNECT_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-2
+        CONNECT_REST_PORT: 8084
+        CONNECT_GROUP_ID: kafka-connect-group
+        CONNECT_CONFIG_STORAGE_TOPIC: kafka-connect-configs
+        CONNECT_OFFSET_STORAGE_TOPIC: kafka-connect-offsets
+        CONNECT_STATUS_STORAGE_TOPIC: kafka-connect-status
+        CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+        CONNECT_PLUGIN_PATH: /usr/share/java
+      restart: always
+
+  kafka-connect-3:
+      image: confluentinc/cp-kafka-connect:5.3.1
+      container_name: kafka-connect-3
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+      ports:
+        - "8085:8083"
+      environment:
+        CONNECT_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-3
+        CONNECT_REST_PORT: 8085
+        CONNECT_GROUP_ID: kafka-connect-group
+        CONNECT_CONFIG_STORAGE_TOPIC: kafka-connect-configs
+        CONNECT_OFFSET_STORAGE_TOPIC: kafka-connect-offsets
+        CONNECT_STATUS_STORAGE_TOPIC: kafka-connect-status
+        CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+        CONNECT_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+        CONNECT_PLUGIN_PATH: /usr/share/java
+      restart: always
+
+  ksql-server-1:
+      image: confluentinc/cp-ksql-server:5.3.1
+      container_name: ksql-server-1
+      depends_on:
+        - kafka-1
+        - kafka-2
+        - kafka-3
+        - kafka-connect-1
+        - kafka-connect-2
+        - kafka-connect-3
+      ports:
+        - "8088:8088"
+      environment:
+        KSQL_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        KSQL_LISTENERS: http://0.0.0.0:8088/
+        KSQL_KSQL_SERVICE_ID: ksql_service_1_
+        KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry-1:8081"
+      restart: always
+
+ksql-server-2:
+      image: confluentinc/cp-ksql-server:5.3.1
+      container_name: ksql-server-2
+      depends_on:
+        - kafka-1
+        - kafka-2
+        - kafka-3
+        - kafka-connect-1
+        - kafka-connect-2
+        - kafka-connect-3
+      ports:
+        - "8089:8088"
+      environment:
+        KSQL_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        KSQL_LISTENERS: http://0.0.0.0:8089/
+        KSQL_KSQL_SERVICE_ID: ksql_service_1_
+        KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry-2:8082"
+      restart: always
+      
+ksql-server-3:
+      image: confluentinc/cp-ksql-server:5.3.1
+      container_name: ksql-server-3
+      depends_on:
+        - kafka-1
+        - kafka-2
+        - kafka-3
+        - kafka-connect-1
+        - kafka-connect-2
+        - kafka-connect-3
+      ports:
+        - "8090:8088"
+      environment:
+        KSQL_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        KSQL_LISTENERS: http://0.0.0.0:8090/
+        KSQL_KSQL_SERVICE_ID: ksql_service_1_
+        KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry-3:8083"
+      restart: always
+
+  ksql-cli:
+      image: confluentinc/cp-ksql-cli:5.3.1
+      container_name: ksql-cli
+      depends_on:
+        - kafka-1
+        - kafka-2
+        - kafka-3
+        - kafka-connect-1
+        - kafka-connect-2
+        - kafka-connect-3
+        - ksql-server-1
+        - ksql-server-2
+        - ksql-server-3
+      network_mode: "host"
+      restart: always
+      entrypoint: /bin/sh
+      tty: true
+
+  rest-proxy:
+      image: confluentinc/cp-kafka-rest:5.3.1
+      hostname: rest-proxy
+      container_name: rest-proxy
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+        - kafka-1
+        - kafka-2
+        - kafka-3
+        - schema-registry-1
+        - schema-registry-2
+        - schema-registry-3
+      ports:
+        - "8082:8082"
+      environment:
+        KAFKA_REST_HOST_NAME: rest-proxy
+        KAFKA_REST_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        KAFKA_REST_LISTENERS: http://0.0.0.0:8082/
+        KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry-1:8081"
+      restart: always
